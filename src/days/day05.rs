@@ -1,16 +1,14 @@
-
 #![allow(dead_code)]
 
 use crate::*;
-use std::str::FromStr;
 use std::collections::VecDeque;
-use std::iter::{once};
-
+use std::iter::once;
+use std::str::FromStr;
 
 const MAX_STEPS: usize = 500_000;
 
 #[derive(Clone)]
-pub struct Data ( pub Vec<isize> );
+pub struct Data(pub Vec<isize>);
 
 impl FromStr for Data {
     type Err = AocErr;
@@ -23,12 +21,11 @@ impl FromStr for Data {
     }
 }
 
-
 #[derive(Debug)]
 enum Value {
     Position(usize),
     Immediate(isize),
-    Relative(isize)
+    Relative(isize),
 }
 
 #[derive(Debug)]
@@ -42,7 +39,7 @@ enum Opcode {
     CmpLt(Value, Value, Value),
     CmpEq(Value, Value, Value),
     Halt,
-    SetBase(Value)
+    SetBase(Value),
 }
 
 pub struct Context {
@@ -51,7 +48,7 @@ pub struct Context {
     output: Vec<isize>,
     pc: usize,
     halted: bool,
-    base: isize
+    base: isize,
 }
 
 fn decode_val(value: isize, mode: u8) -> Value {
@@ -59,51 +56,88 @@ fn decode_val(value: isize, mode: u8) -> Value {
         0 => Value::Position(value as usize),
         1 => Value::Immediate(value),
         2 => Value::Relative(value),
-        _ => unreachable!()
+        _ => unreachable!(),
     }
 }
 
 fn decode(data: &[isize]) -> AocResult<(Opcode, usize)> {
     let mut op = data[0];
 
-    let third_mode = (op/10_000) as u8;
+    let third_mode = (op / 10_000) as u8;
     op %= 10_000;
 
-    let second_mode = (op/1_000) as u8;
+    let second_mode = (op / 1_000) as u8;
     op %= 1_000;
 
-    let first_mode = (op/100) as u8;
+    let first_mode = (op / 100) as u8;
     op %= 100;
 
-
     Ok(match op {
-        1 => (Opcode::Add(decode_val(data[1], first_mode), decode_val(data[2], second_mode), decode_val(data[3], third_mode)), 4),
-        2 => (Opcode::Mul(decode_val(data[1], first_mode), decode_val(data[2], second_mode), decode_val(data[3], third_mode)), 4),
+        1 => (
+            Opcode::Add(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+                decode_val(data[3], third_mode),
+            ),
+            4,
+        ),
+        2 => (
+            Opcode::Mul(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+                decode_val(data[3], third_mode),
+            ),
+            4,
+        ),
         3 => (Opcode::In(decode_val(data[1], first_mode)), 2),
         4 => (Opcode::Out(decode_val(data[1], first_mode)), 2),
-        5 => (Opcode::JumpTrue(decode_val(data[1], first_mode), decode_val(data[2], second_mode)), 3),
-        6 => (Opcode::JumpFalse(decode_val(data[1], first_mode), decode_val(data[2], second_mode)), 3),
-        7 => (Opcode::CmpLt(decode_val(data[1], first_mode), decode_val(data[2], second_mode), decode_val(data[3], third_mode)), 4),
-        8 => (Opcode::CmpEq(decode_val(data[1], first_mode), decode_val(data[2], second_mode), decode_val(data[3], third_mode)), 4),
+        5 => (
+            Opcode::JumpTrue(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+            ),
+            3,
+        ),
+        6 => (
+            Opcode::JumpFalse(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+            ),
+            3,
+        ),
+        7 => (
+            Opcode::CmpLt(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+                decode_val(data[3], third_mode),
+            ),
+            4,
+        ),
+        8 => (
+            Opcode::CmpEq(
+                decode_val(data[1], first_mode),
+                decode_val(data[2], second_mode),
+                decode_val(data[3], third_mode),
+            ),
+            4,
+        ),
         9 => (Opcode::SetBase(decode_val(data[1], first_mode)), 2),
         99 => (Opcode::Halt, 1),
-        _ => return Err(AocErr::Custom(format!("Invalid Opcode {}", data[0])))
+        _ => return Err(AocErr::Custom(format!("Invalid Opcode {}", data[0]))),
     })
 }
 
 impl Context {
     pub fn from_data(data: Data, inputs: &[isize]) -> Context {
-        let input = inputs.iter()
-            .cloned()
-            .collect();
+        let input = inputs.iter().cloned().collect();
 
-        Context{
+        Context {
             data: data.0,
             input,
             output: Vec::new(),
             pc: 0,
             halted: false,
-            base: 0
+            base: 0,
         }
     }
 
@@ -137,7 +171,7 @@ impl Context {
         self.input.push_back(input);
     }
 
-    fn bool_to_num(b: bool)  -> isize{
+    fn bool_to_num(b: bool) -> isize {
         if b {
             1
         } else {
@@ -151,67 +185,67 @@ impl Context {
         }
     }
 
-    fn read_val(&self, val: & Value) -> isize {
+    fn read_val(&self, val: &Value) -> isize {
         match val {
             Value::Immediate(val) => *val,
             Value::Position(ix) => self.data[*ix],
-            Value::Relative(off) => self.data[(self.base + *off) as usize]
+            Value::Relative(off) => self.data[(self.base + *off) as usize],
         }
     }
-
 
     fn write_val(&mut self, val: &Value, value: isize) {
         match val {
             Value::Position(val) => self.data[*val] = value,
             Value::Relative(off) => self.data[(self.base + *off) as usize] = value,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 
-
     pub fn resume(&mut self) -> AocResult<usize> {
         for cycle in 0..MAX_STEPS {
-            let (op,ln) = decode(&self.data[self.pc..])?;
+            let (op, ln) = decode(&self.data[self.pc..])?;
             self.pc += ln;
 
             match op {
                 Opcode::Halt => {
                     self.halted = true;
                     return Ok(cycle);
-                },
+                }
                 Opcode::Add(a, b, c) => {
                     let value = self.read_val(&a) + self.read_val(&b);
                     self.write_val(&c, value);
-                },
+                }
                 Opcode::Mul(a, b, c) => {
                     let value = self.read_val(&a) * self.read_val(&b);
                     self.write_val(&c, value);
-                },
+                }
                 Opcode::In(a) => {
-                    let value = self.input.pop_front().ok_or_else(|| custom_err("Not enough inputs"))?;
+                    let value = self
+                        .input
+                        .pop_front()
+                        .ok_or_else(|| custom_err("Not enough inputs"))?;
                     self.write_val(&a, value);
-                },
+                }
                 Opcode::Out(a) => {
                     self.output.push(self.read_val(&a));
                     return Ok(cycle);
-                },
+                }
                 Opcode::JumpTrue(a, dst) => self.jump_if(self.read_val(&a) != 0, &dst),
-                Opcode::JumpFalse(a, dst)  => self.jump_if(self.read_val(&a) == 0, &dst),
+                Opcode::JumpFalse(a, dst) => self.jump_if(self.read_val(&a) == 0, &dst),
                 Opcode::CmpLt(a, b, dst) => {
-                        let value = Self::bool_to_num(self.read_val(&a) < self.read_val(&b));
-                        self.write_val(&dst, value);
-                },
+                    let value = Self::bool_to_num(self.read_val(&a) < self.read_val(&b));
+                    self.write_val(&dst, value);
+                }
                 Opcode::CmpEq(a, b, dst) => {
                     let value = Self::bool_to_num(self.read_val(&a) == self.read_val(&b));
                     self.write_val(&dst, value);
-                },
-                Opcode::SetBase(a) => self.base += self.read_val(&a)
+                }
+                Opcode::SetBase(a) => self.base += self.read_val(&a),
             }
         }
 
         Err(AocErr::Custom("Exceeded max steps".to_string()))
     }
-
 
     pub fn exec(&mut self) -> AocResult<isize> {
         let mut cycle = 0;
@@ -226,7 +260,6 @@ impl Context {
     }
 }
 
-
 fn run(data: Data, input: isize) -> AocResult<isize> {
     let mut ctx = Context::from_data(data, &[input]);
 
@@ -237,11 +270,9 @@ fn run(data: Data, input: isize) -> AocResult<isize> {
 mod tests {
     use super::*;
 
-
     #[test]
     fn test_jump() -> AocResult<()> {
         let data: Data = "3,21,1008,21,8,20,1005,20,22,107,8,21,20,1006,20,31,1106,0,36,98,0,0,1002,21,125,20,4,20,1105,1,46,104,999,1105,1,46,1101,1000,1,20,4,20,1105,1,46,98,99".parse()?;
-
 
         assert_eq!(999, run(data.clone(), 7)?);
         assert_eq!(1000, run(data.clone(), 8)?);
@@ -250,7 +281,6 @@ mod tests {
         Ok(())
     }
 
- 
     #[test]
     fn part1() -> AocResult<()> {
         let data: Data = parse_file(FileType::Input, 5, 1)?;
@@ -266,5 +296,4 @@ mod tests {
 
         Ok(())
     }
-
 }

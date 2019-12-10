@@ -2,15 +2,10 @@ use aoc19::data_path;
 use itertools::Itertools;
 use std::fs::rename;
 
-
 fn new_name(name: &str) -> String {
     name.split('_')
         .enumerate()
-        .filter_map(|(ix, s)| if ix != 1 {
-            Some(s)
-        } else {
-            None
-        })
+        .filter_map(|(ix, s)| if ix != 1 { Some(s) } else { None })
         .join("_")
 }
 
@@ -35,9 +30,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_rename()  {
+    fn test_rename() {
         assert_eq!("in_01.data", &new_name("in_01_01.data"));
         assert_eq!("in_01.data", &new_name("in_09_01.data"));
     }
-
 }

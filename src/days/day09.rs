@@ -17,7 +17,6 @@ mod tests {
         assert_eq!(data.0.as_slice(), &ctx.data()[..data.0.len()]);
         assert!(ctx.halted());
 
-
         let data: Data = "1102,34915192,34915192,7,4,7,99,0".parse()?;
         let mut ctx = Context::from_data_fill_up(data, &[]);
         ctx.exec()?;
@@ -30,16 +29,11 @@ mod tests {
         assert_eq!(1_125_899_906_842_624, ctx.output().unwrap());
         assert!(ctx.halted());
 
-
-
         let data = parse_file(FileType::Input, DAY, 01)?;
         let mut ctx = Context::from_data_fill_up(data, &[1]);
 
-
         ctx.exec()?;
         assert_eq!(3_235_019_597, ctx.output().unwrap());
-
-
 
         Ok(())
     }

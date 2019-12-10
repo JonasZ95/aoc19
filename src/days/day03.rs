@@ -1,15 +1,14 @@
-
 #![allow(dead_code)]
 use crate::*;
-use std::str::FromStr;
 use std::collections::HashMap;
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub enum Dir {
     Up(usize),
     Down(usize),
     Right(usize),
-    Left(usize)
+    Left(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -18,13 +17,10 @@ pub struct Wire(pub Vec<Dir>);
 impl FromStr for Wire {
     type Err = AocErr;
     fn from_str(s: &str) -> AocResult<Self> {
-        let v: Result<Vec<_>, _> = s.split(',')
-                .map(|s| s.parse())
-                .collect();
+        let v: Result<Vec<_>, _> = s.split(',').map(|s| s.parse()).collect();
 
         Ok(Wire(v?))
     }
-
 }
 
 impl FromStr for Dir {
@@ -32,7 +28,7 @@ impl FromStr for Dir {
 
     fn from_str(s: &str) -> AocResult<Self> {
         if s.is_empty() {
-            return Err(AocErr::Custom("Empty dir".to_string()))
+            return Err(AocErr::Custom("Empty dir".to_string()));
         }
 
         let (dir, num) = s.split_at(1);
@@ -44,7 +40,7 @@ impl FromStr for Dir {
             'D' => Dir::Down(num),
             'R' => Dir::Right(num),
             'L' => Dir::Left(num),
-            _ => return Err(AocErr::Custom("Invalid dir".to_string()))
+            _ => return Err(AocErr::Custom("Invalid dir".to_string())),
         })
     }
 }
@@ -52,7 +48,7 @@ impl FromStr for Dir {
 #[derive(Debug)]
 pub struct Data {
     pub wire1: Wire,
-    pub wire2: Wire
+    pub wire2: Wire,
 }
 
 impl FromStr for Data {
@@ -65,9 +61,9 @@ impl FromStr for Data {
             return Err(custom_err("Not 2 wires"));
         }
 
-        Ok(Data{
+        Ok(Data {
             wire1: v[0].clone(),
-            wire2: v[1].clone()
+            wire2: v[1].clone(),
         })
     }
 }
@@ -85,20 +81,19 @@ impl Point2 {
     }
 }
 
-
 #[derive(Debug)]
 struct Circuit {
     board: HashMap<Point2, u8>,
     wire1: Wire,
-    wire2: Wire
+    wire2: Wire,
 }
 
 impl Circuit {
     fn from_data(data: &Data) -> Self {
-        let mut circ = Circuit{
+        let mut circ = Circuit {
             board: HashMap::new(),
             wire1: data.wire1.clone(),
-            wire2: data.wire2.clone()
+            wire2: data.wire2.clone(),
         };
 
         circ.add_wire(&data.wire1, 1);
@@ -112,8 +107,7 @@ impl Circuit {
     }
 
     fn get_mut(&mut self, p: Point2) -> &mut u8 {
-        self.board.entry(p)
-            .or_insert(0)
+        self.board.entry(p).or_insert(0)
     }
 
     fn get(&self, p: &Point2) -> &u8 {
@@ -125,8 +119,8 @@ impl Circuit {
 
         let new = match *p {
             0 => wire_id,
-            _ if *p == wire_id  => wire_id,
-            _ => 255
+            _ if *p == wire_id => wire_id,
+            _ => 255,
         };
 
         *p = new;
@@ -137,9 +131,9 @@ impl Circuit {
         for dir in &wire.0 {
             let (x, y, steps) = match dir {
                 Dir::Down(n) => (0, 1, *n),
-                Dir::Up(n) => (0, -1 ,*n),
+                Dir::Up(n) => (0, -1, *n),
                 Dir::Left(n) => (-1, 0, *n),
-                Dir::Right(n) => (1, 0, *n)
+                Dir::Right(n) => (1, 0, *n),
             };
 
             for _i in 0..steps {
@@ -149,15 +143,10 @@ impl Circuit {
         }
     }
 
-
-    fn intersections(&self) -> impl Iterator<Item=Point2> + '_{
-        self.board.iter()
-            .filter_map(|(&k, &v)| if v == 255 {
-                Some(k)
-            } else {
-                None
-            })
-
+    fn intersections(&self) -> impl Iterator<Item = Point2> + '_ {
+        self.board
+            .iter()
+            .filter_map(|(&k, &v)| if v == 255 { Some(k) } else { None })
     }
 
     fn step_ints(&self, wire: &Wire) -> HashMap<Point2, usize> {
@@ -168,9 +157,9 @@ impl Circuit {
         for dir in &wire.0 {
             let (x, y, steps) = match dir {
                 Dir::Down(n) => (0, 1, *n),
-                Dir::Up(n) => (0, -1 ,*n),
+                Dir::Up(n) => (0, -1, *n),
                 Dir::Left(n) => (-1, 0, *n),
-                Dir::Right(n) => (1, 0, *n)
+                Dir::Right(n) => (1, 0, *n),
             };
 
             for _i in 0..steps {
@@ -178,8 +167,7 @@ impl Circuit {
                 p = p.add(x, y);
 
                 if *self.get(&p) == 255 {
-                    shortest.entry(p)
-                        .or_insert(step);
+                    shortest.entry(p).or_insert(step);
                 }
             }
         }
@@ -191,8 +179,8 @@ impl Circuit {
         let shortest1 = self.step_ints(&self.wire1);
         let shortest2 = self.step_ints(&self.wire2);
 
-
-        shortest1.iter()
+        shortest1
+            .iter()
             .map(|(pt, steps)| steps + shortest2[pt])
             .min()
             .unwrap()
@@ -206,7 +194,6 @@ impl Circuit {
             .unwrap()
     }
 }
-
 
 #[cfg(test)]
 mod tests {

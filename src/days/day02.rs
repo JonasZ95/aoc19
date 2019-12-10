@@ -17,7 +17,7 @@ mod tests {
 
         Ok(())
     }
- 
+
     #[test]
     fn part1() -> AocResult<()> {
         let mut data: Data = parse_file(FileType::Input, 2, 1)?;
@@ -46,11 +46,9 @@ mod tests {
                 data.0[2] = verb;
                 let mut ctx = Context::from_data(data, &[]);
 
-
-
                 if ctx.resume().is_ok() && ctx.read(0) == OUTPUT {
-                    assert_eq!(7621, 100*noun + verb);
-                    return Ok(())
+                    assert_eq!(7621, 100 * noun + verb);
+                    return Ok(());
                 }
             }
         }

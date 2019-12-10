@@ -1,11 +1,9 @@
-
 #![allow(dead_code)]
 
 use crate::*;
-use std::str::FromStr;
-use std::collections::{HashMap, HashSet, VecDeque};
 use id_tree::*;
-
+use std::collections::{HashMap, HashSet, VecDeque};
+use std::str::FromStr;
 
 #[derive(PartialEq, Debug)]
 pub struct Orbits(String, String);
@@ -15,7 +13,8 @@ impl FromStr for Orbits {
     type Err = AocErr;
 
     fn from_str(s: &str) -> AocResult<Orbits> {
-        let ix = s.find(')')
+        let ix = s
+            .find(')')
             .ok_or_else(|| custom_err("Orbit relation invalid"))?;
         let (s1, s2) = s.split_at(ix);
 
@@ -38,19 +37,16 @@ fn build_tree(data: Data) -> Tree<(String, usize)> {
     let mut map = HashMap::<String, HashSet<String>>::new();
 
     for o in data.0.iter() {
-        map.entry(o.0.clone())
-            .or_default()
-            .insert(o.1.clone());
+        map.entry(o.0.clone()).or_default().insert(o.1.clone());
     }
 
     let mut tree = TreeBuilder::new()
-        .with_node_capacity(data.0.len()/2)
+        .with_node_capacity(data.0.len() / 2)
         .build();
 
     let root_id: NodeId = tree
         .insert(Node::new(("COM".to_string(), 0)), AsRoot)
         .unwrap();
-
 
     let mut q = VecDeque::new();
     q.push_back(("COM".to_string(), 0, root_id));
@@ -58,12 +54,14 @@ fn build_tree(data: Data) -> Tree<(String, usize)> {
     while let Some((key, level, parent)) = q.pop_front() {
         let childs = match map.get(&key) {
             Some(childs) => childs,
-            None => continue
+            None => continue,
         };
 
         for child in childs {
             let level = level + 1;
-            let child_id: NodeId = tree.insert(Node::new((child.clone(), level)), UnderNode(&parent)).unwrap();
+            let child_id: NodeId = tree
+                .insert(Node::new((child.clone(), level)), UnderNode(&parent))
+                .unwrap();
             q.push_back((child.clone(), level, child_id))
         }
     }
@@ -75,7 +73,8 @@ fn calc_checksum(data: Data) -> AocResult<usize> {
     let tree = build_tree(data);
 
     let root_id = tree.root_node_id().unwrap();
-    let sum = tree.traverse_pre_order(&root_id)
+    let sum = tree
+        .traverse_pre_order(&root_id)
         .unwrap()
         .map(|n| n.data().1)
         .sum();
@@ -90,20 +89,15 @@ fn calc_orbit_moves(data: Data) -> AocResult<usize> {
     let find_node = |s: String| {
         tree.traverse_pre_order(&root_id)
             .unwrap()
-            .find(|n| {
-                n.data().0 == s
-            })
+            .find(|n| n.data().0 == s)
             .unwrap()
     };
 
-    let get_parent = |n: &Node<(String, usize)>| {
-        tree.get(n.parent().unwrap()).unwrap()
-    };
+    let get_parent = |n: &Node<(String, usize)>| tree.get(n.parent().unwrap()).unwrap();
 
     let mut left = find_node("YOU".to_string());
     let mut right = find_node("SAN".to_string());
     let mut steps = 0;
-
 
     //Find least common ancestor
     while left != right {
@@ -115,7 +109,7 @@ fn calc_orbit_moves(data: Data) -> AocResult<usize> {
             Less => {
                 right = get_parent(right);
                 steps += 1;
-            },
+            }
             Greater => {
                 left = get_parent(left);
                 steps += 1;
@@ -124,14 +118,12 @@ fn calc_orbit_moves(data: Data) -> AocResult<usize> {
                 right = get_parent(right);
                 left = get_parent(left);
                 steps += 2;
-            },
-
+            }
         }
     }
 
-    Ok(steps-2)
+    Ok(steps - 2)
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -144,7 +136,7 @@ mod tests {
 
         Ok(())
     }
- 
+
     #[test]
     fn part1() -> AocResult<()> {
         let data: Data = parse_file(FileType::Example, 6, 1)?;

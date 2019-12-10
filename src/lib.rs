@@ -1,32 +1,34 @@
 pub mod days;
 
-use std::path::PathBuf;
-use thiserror::Error;
-use std::str::FromStr;
 use std::fs;
 use std::io::Read;
-
+use std::path::PathBuf;
+use std::str::FromStr;
+use thiserror::Error;
 
 pub enum FileType {
     Input,
-    Example
+    Example,
 }
 
 impl ToString for FileType {
     fn to_string(&self) -> String {
         match self {
             FileType::Input => "in",
-            FileType::Example => "ex"
-        }.to_string()
+            FileType::Example => "ex",
+        }
+        .to_string()
     }
 }
 
-pub fn custom_err<S: ToString>(s: S) -> AocErr{
+pub fn custom_err<S: ToString>(s: S) -> AocErr {
     AocErr::Custom(s.to_string())
 }
 
 pub fn data_path() -> PathBuf {
-    PathBuf::from("/home/jonas/projects/rust/aoc19/data")
+    let mut cwd = std::env::current_dir().unwrap();
+    cwd.push("data");
+    cwd
 }
 
 pub fn day_path(day: usize) -> PathBuf {
@@ -41,32 +43,30 @@ pub fn file_path(file_type: FileType, day: usize, task: usize) -> PathBuf {
     p
 }
 
-pub fn parse_file<T: FromStr>(file_type: FileType, day: usize, task: usize) -> AocResult<T> 
-    where <T as FromStr>::Err: std::error::Error + 'static
+pub fn parse_file<T: FromStr>(file_type: FileType, day: usize, task: usize) -> AocResult<T>
+where
+    <T as FromStr>::Err: std::error::Error + 'static,
 {
-    let p  = file_path(file_type, day, task);
+    let p = file_path(file_type, day, task);
     let mut f = fs::File::open(p)?;
     let mut s = String::new();
     f.read_to_string(&mut s)?;
 
-    s.parse()
-        .map_err(|err| AocErr::Other(Box::new(err)
-    ))
+    s.parse().map_err(|err| AocErr::Other(Box::new(err)))
 }
-
 
 pub struct ParseLineVec<T>(pub Vec<T>);
 
-impl<T: FromStr> FromStr for ParseLineVec<T>  
-    where <T as FromStr>::Err: std::error::Error + 'static {
+impl<T: FromStr> FromStr for ParseLineVec<T>
+where
+    <T as FromStr>::Err: std::error::Error + 'static,
+{
     type Err = AocErr;
 
     fn from_str(s: &str) -> AocResult<Self> {
         let mut v = Vec::new();
         for line in s.lines() {
-            v.push(T::from_str(line)
-                .map_err(|err| AocErr::Other(Box::new(err)))?
-            )
+            v.push(T::from_str(line).map_err(|err| AocErr::Other(Box::new(err)))?)
         }
 
         Ok(ParseLineVec(v))
@@ -83,7 +83,7 @@ pub enum AocErr {
     #[error("Custom: {0}")]
     Custom(String),
     #[error("Other: {0}")]
-    Other(Box<dyn std::error::Error>)
+    Other(Box<dyn std::error::Error>),
 }
 
 pub type AocResult<T> = Result<T, AocErr>;

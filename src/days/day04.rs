@@ -1,4 +1,3 @@
-
 #![allow(dead_code)]
 
 use crate::*;
@@ -12,7 +11,6 @@ fn digits_iter(num: usize) -> impl Iterator<Item = u8> + 'static {
             num %= base;
             digit
         })
-        
 }
 
 fn is_valid_pw(pw: usize) -> bool {
@@ -73,16 +71,14 @@ fn is_valid_pw2(pw: usize) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
- 
+
     #[test]
     fn part1() -> AocResult<()> {
         assert!(is_valid_pw(111_111));
         assert!(!is_valid_pw(223_450));
         assert!(!is_valid_pw(123_789));
 
-        let n = (234_208..765_869)
-            .filter(|&pw| is_valid_pw(pw))
-            .count();
+        let n = (234_208..765_869).filter(|&pw| is_valid_pw(pw)).count();
 
         assert_eq!(n, 1246);
         Ok(())
@@ -94,9 +90,7 @@ mod tests {
         assert!(!is_valid_pw2(123_444));
         assert!(is_valid_pw2(111_122));
 
-        let n = (234_208..765_869)
-            .filter(|&pw| is_valid_pw2(pw))
-            .count();
+        let n = (234_208..765_869).filter(|&pw| is_valid_pw2(pw)).count();
 
         assert_eq!(n, 814);
 
