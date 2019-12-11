@@ -2,17 +2,12 @@
 
 use crate::*;
 use days::day05::{Data, Context};
-use std::convert::{TryFrom, TryInto};
+use std::convert::{TryFrom};
 use image::ImageBuffer;
+use ndarray::Array2;
+use crate::helper::point2d::{Dir, Point2D};
 
 const DAY: usize = 11;
-
-pub enum Dir {
-    North,
-    South,
-    West,
-    East
-}
 
 #[derive(Clone, Copy)]
 pub enum Color {
@@ -41,49 +36,19 @@ impl Into<u8> for Color {
     }
 }
 
-impl Dir {
-    fn next_right(&self) -> Dir {
-        use Dir::*;
-        match *self {
-            North => East,
-            East => South,
-            South => West,
-            West => North
-        }
-    }
-
-    fn next_left(&self) -> Dir {
-        use Dir::*;
-        match *self {
-            South => East,
-            West => South,
-            North => West,
-            East => North
-        }
-    }
-
-    fn next_pos(&self, pos: (usize, usize)) -> (usize, usize) {
-        match self {
-            Dir::North => (pos.0, pos.1-1),
-            Dir::East => (pos.0+1, pos.1),
-            Dir::West => (pos.0-1, pos.1),
-            Dir::South => (pos.0, pos.1+1)
-        }
-    }
-}
-
 fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
     const N: usize = 128;
-    const CENTER: usize = N / 2;
+    const CENTER: isize = (N / 2) as isize;
 
+    let mut grid = Array2::from_elem((N, N), (start,0));
     let mut ctx = Context::from_data_fill_up(data, &[]);
-    let mut grid = [[(start, 0); N]; N];
-    let mut pos = (CENTER, CENTER);
+    let mut pos = Point2D(CENTER, CENTER);
     let mut dir = Dir::North;
 
 
     loop {
-        let color: u8 = grid[pos.1][pos.0].0.into();
+        let ix = pos.into_index().unwrap();
+        let color: u8 = grid[ix].0.into();
         ctx.push_input(color as isize);
 
         ctx.resume()?;
@@ -96,22 +61,22 @@ fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
         let turn = ctx.pop_output().unwrap();
         let color = ctx.pop_output().unwrap();
 
-        let counter = grid[pos.1][pos.0].1;
+        let counter = grid[ix].1;
         let color = Color::try_from(color as u8)?;
-        grid[pos.1][pos.0] = (color, counter+1);
+        grid[ix] = (color, counter+1);
 
         dir = match turn {
-            0 => dir.next_left(),
-            1 => dir.next_right(),
+            0 => dir.left(),
+            1 => dir.right(),
             _ => unreachable!()
         };
 
-        pos = dir.next_pos(pos);
+        pos = dir.next_pos(&pos);
     }
 
     if save {
         let img = ImageBuffer::from_fn(N as u32, N as u32, |x, y| {
-           match grid[y as usize][x as usize].0 {
+           match grid[(x as usize,y as usize)].0 {
                Color::Black => image::Luma([0u8]),
                Color::White => image::Luma([255u8])
            }
@@ -120,8 +85,8 @@ fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
         img.save("out11.png").unwrap();
     }
 
-    Ok(grid.iter().flat_map(|v| v.iter())
-        .filter(|(_, count)| *count > 0)
+    Ok(grid.iter()
+        .filter(|g| g.1 > 0)
         .count())
 }
 
