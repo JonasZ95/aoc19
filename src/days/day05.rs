@@ -167,6 +167,11 @@ impl Context {
         &self.output
     }
 
+
+    pub fn pop_output(&mut self) -> Option<isize> {
+        self.output.pop()
+    }
+
     pub fn push_input(&mut self, input: isize) {
         self.input.push_back(input);
     }
@@ -202,6 +207,10 @@ impl Context {
     }
 
     pub fn resume(&mut self) -> AocResult<usize> {
+        if self.halted {
+            return Ok(0);
+        }
+
         for cycle in 0..MAX_STEPS {
             let (op, ln) = decode(&self.data[self.pc..])?;
             self.pc += ln;
