@@ -1,10 +1,8 @@
 #![allow(dead_code)]
 
-use crate::*;
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::*;
     use crate::days::day05::*;
 
     #[test]

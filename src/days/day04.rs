@@ -1,7 +1,5 @@
 #![allow(dead_code)]
 
-use crate::*;
-
 fn digits_iter(num: usize) -> impl Iterator<Item = u8> + 'static {
     let mut num = num;
     [100_000, 10_000, 1_000, 100, 10, 1]
@@ -20,6 +18,7 @@ fn is_valid_pw(pw: usize) -> bool {
 
     let mut last_digit = 0;
     let mut same = false;
+
     for digit in digits_iter(pw) {
         if last_digit > digit {
             return false;
@@ -70,6 +69,7 @@ fn is_valid_pw2(pw: usize) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crate::*;
     use super::*;
 
     #[test]

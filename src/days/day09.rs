@@ -1,11 +1,11 @@
 #![allow(dead_code)]
 
-use crate::*;
 
 const DAY: usize = 09;
 
 #[cfg(test)]
 mod tests {
+    use crate::*;
     use super::*;
     use crate::days::day05::*;
 

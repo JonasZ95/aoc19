@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 
 use crate::*;
-
 const DAY: usize = 00;
 
 #[cfg(test)]

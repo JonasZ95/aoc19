@@ -5,7 +5,8 @@ use days::day05::{Data, Context};
 use std::convert::{TryFrom};
 use image::ImageBuffer;
 use ndarray::Array2;
-use crate::helper::point2d::{Dir, Point2D};
+use crate::helper::dir::{Dir};
+use geo::Point;
 
 const DAY: usize = 11;
 
@@ -37,18 +38,19 @@ impl Into<u8> for Color {
 }
 
 fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
-    const N: usize = 128;
-    const CENTER: isize = (N / 2) as isize;
+    const N: usize = 512;
+    const CENTER: usize = N/2;
 
     let mut grid = Array2::from_elem((N, N), (start,0));
+    grid.swap_axes(1, 0);
+
     let mut ctx = Context::from_data_fill_up(data, &[]);
-    let mut pos = Point2D(CENTER, CENTER);
+    let mut pos = Point::new(CENTER, CENTER);
     let mut dir = Dir::North;
 
 
     loop {
-        let ix = pos.into_index().unwrap();
-        let color: u8 = grid[ix].0.into();
+        let color: u8 = grid[pos.x_y()].0.into();
         ctx.push_input(color as isize);
 
         ctx.resume()?;
@@ -61,9 +63,9 @@ fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
         let turn = ctx.pop_output().unwrap();
         let color = ctx.pop_output().unwrap();
 
-        let counter = grid[ix].1;
+        let counter = grid[pos.x_y()].1;
         let color = Color::try_from(color as u8)?;
-        grid[ix] = (color, counter+1);
+        grid[pos.x_y()] = (color, counter+1);
 
         dir = match turn {
             0 => dir.left(),
@@ -71,7 +73,7 @@ fn run(data: Data, start: Color, save: bool) -> AocResult<usize> {
             _ => unreachable!()
         };
 
-        pos = dir.next_pos(&pos);
+        pos = dir.next_pos(pos);
     }
 
     if save {
