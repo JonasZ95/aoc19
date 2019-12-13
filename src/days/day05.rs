@@ -147,6 +147,11 @@ impl Context {
         Self::from_data(data, inputs)
     }
 
+
+    pub fn data_mut(&mut self) -> &mut [isize] {
+        &mut self.data
+    }
+
     pub fn data(&self) -> &[isize] {
         &self.data
     }
@@ -174,6 +179,10 @@ impl Context {
 
     pub fn push_input(&mut self, input: isize) {
         self.input.push_back(input);
+    }
+
+    pub fn input_len(&self) -> usize {
+        return self.input.len()
     }
 
     fn bool_to_num(b: bool) -> isize {
