@@ -6,7 +6,6 @@ use ndarray::{Array2, Axis};
 use std::convert::{TryFrom, TryInto};
 use geo::Point;
 use std::cmp::Ordering;
-use crate::days::day10::GridField;
 
 const DAY: usize = 13;
 
