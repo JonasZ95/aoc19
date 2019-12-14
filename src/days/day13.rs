@@ -6,6 +6,7 @@ use ndarray::{Array2, Axis};
 use std::convert::{TryFrom, TryInto};
 use geo::Point;
 use std::cmp::Ordering;
+use crate::days::day10::GridField;
 
 const DAY: usize = 13;
 
@@ -60,10 +61,10 @@ pub struct Game  {
 }
 
 impl Game {
-    fn create(data: Data, play: bool) -> AocResult<Game> {
+    pub fn create(data: Data, play: bool) -> AocResult<Game> {
         let mut ctx = Context::from_data_fill_up(data, &[]);
 
-        let mut grid = Array2::from_elem((25, 50), Tile::Empty);
+        let mut grid = Array2::from_elem((30, 50), Tile::Empty);
         grid.swap_axes(1, 0);
 
         if play {
@@ -112,6 +113,31 @@ impl Game {
         })
     }
 
+    pub fn shape(&self) -> (usize, usize) {
+        let shape = self.tile_grid.shape();
+        (shape[0], shape[1])
+    }
+
+    pub fn ball(&self) -> Point<usize> {
+        self.ball_pos
+    }
+
+    pub fn paddle(&self) -> Point<usize> {
+        self.paddle_pos
+    }
+
+    pub fn walls(&self) -> impl Iterator<Item=Point<usize>> + '_ {
+        self.tile_grid.indexed_iter()
+            .filter(|(_, tile)| tile == &&Tile::Wall)
+            .map(|(p, _)| Point::new(p.0, p.1))
+    }
+
+    pub fn blocks(&self) -> impl Iterator<Item=Point<usize>> + '_ {
+        self.tile_grid.indexed_iter()
+            .filter(|(_, tile)| tile == &&Tile::Block)
+            .map(|(p, _)| Point::new(p.0, p.1))
+    }
+
     fn draw(grid: &mut Array2<Tile>, tile_id: isize, x: isize, y: isize) -> AocResult<()>
     {
         let pt = Point::new(x as usize, y as usize);
@@ -141,7 +167,7 @@ impl Game {
         Ok(())
     }
 
-    fn update(&mut self) -> AocResult<bool> {
+    pub fn update(&mut self) -> AocResult<bool> {
         let ctx = &mut self.ctx;
         ctx.resume()?;
         ctx.resume()?;
@@ -161,8 +187,28 @@ impl Game {
             Ok(false)
         } else {
             self.game_draw(val, x, y)?;
+
             Ok(val == 4)
         }
+    }
+
+    pub fn auto_play(&mut self) -> AocResult<()> {
+        if !self.ctx.halted() {
+            if self.update()? {
+                let input = match self.ball_pos.x().cmp(&self.paddle_pos.x()) {
+                    Ordering::Equal => Input::Neutral,
+                    Ordering::Greater => Input::Right,
+                    Ordering::Less => Input::Left
+                };
+                self.ctx.push_input(input.into());
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn score(&self) -> usize {
+        self.score
     }
 
     fn play(mut self) -> AocResult<usize> {
@@ -186,6 +232,10 @@ impl Game {
         Ok(self.score)
     }
 
+    pub fn set_input(&mut self, input: Input) {
+        self.ctx.push_input(input.into());
+    }
+
     fn count_blocks(&self) -> usize {
         self.tile_grid.iter()
             .filter(|tile| match tile {
@@ -195,7 +245,7 @@ impl Game {
             .count()
     }
 
-    fn print(&self) {
+    pub fn print(&self) {
         for row in self.tile_grid.lanes(Axis(0)) {
             for tile in row.into_iter() {
                 let c = match tile {
